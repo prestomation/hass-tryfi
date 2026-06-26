@@ -12,7 +12,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, MANUFACTURER, MODEL
+from .const import DOMAIN, MANUFACTURER
+from .helpers import collar_device_info
 from .pytryfi import PyTryFi, FiPet, FiBase, FiWifiNetwork
 from . import TryFiDataUpdateCoordinator
 
@@ -124,24 +125,7 @@ class TryFiPetTracker(CoordinatorEntity, TrackerEntity):
         if not pet:
             return {}
 
-        device_info = {
-            "identifiers": {(DOMAIN, pet.petId)},
-            "name": pet.name,
-            "manufacturer": MANUFACTURER,
-        }
-
-        # Add breed if available
-        if hasattr(pet, "breed") and pet.breed:
-            device_info["model"] = f"{MODEL} - {pet.breed}"
-        else:
-            device_info["model"] = MODEL
-
-        # Add firmware version if available
-        if hasattr(pet, "device") and pet.device:
-            if hasattr(pet.device, "buildId") and pet.device.buildId is not None:
-                device_info["sw_version"] = pet.device.buildId
-
-        return device_info
+        return collar_device_info(pet)
 
 
 class TryFiBaseTracker(CoordinatorEntity, TrackerEntity):

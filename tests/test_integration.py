@@ -144,7 +144,10 @@ async def test_full_integration_flow(hass: HomeAssistant, mock_tryfi_api) -> Non
     assert pet_device is not None
     assert pet_device.name == "Buddy"
     assert pet_device.manufacturer == "TryFi"
-    assert pet_device.model == "Smart Dog Collar - Golden Retriever"
+    # Model is derived from the collar's moduleId, with the moduleId exposed as
+    # the serial number; the breed is no longer part of the model.
+    assert pet_device.model == "Series 3 Collar"
+    assert pet_device.serial_number == "DEVICEID"
     assert pet_device.sw_version == "1.2.3"
 
     # Check entities exist
