@@ -23,6 +23,7 @@ def mock_pet_charging():
     pet.device = Mock()
     pet.device.isCharging = True
     pet.device.buildId = "1.2.3"
+    pet.device.moduleId = "FC2ABC123"
     return pet
 
 
@@ -52,7 +53,10 @@ async def test_battery_charging_sensor_on(
     device_info = sensor.device_info
     assert device_info["identifiers"] == {(DOMAIN, "test_pet_123")}
     assert device_info["name"] == "Fido"
-    assert "Labrador" in device_info["model"]
+    # Model is derived from the collar's moduleId, not the breed
+    assert device_info["model"] == "Series 2 Collar"
+    assert "Labrador" not in device_info["model"]
+    assert device_info["serial_number"] == "FC2ABC123"
     assert device_info["sw_version"] == "1.2.3"
 
 

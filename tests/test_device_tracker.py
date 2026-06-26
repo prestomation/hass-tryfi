@@ -26,6 +26,7 @@ def mock_pet_location():
     pet.device = Mock()
     pet.device.batteryPercent = 85
     pet.device.buildId = "1.2.3"
+    pet.device.moduleId = "FC2ABC123"
     return pet
 
 
@@ -55,7 +56,10 @@ async def test_tracker_entity_properties(
     device_info = tracker.device_info
     assert device_info["identifiers"] == {(DOMAIN, "test_pet_123")}
     assert device_info["name"] == "Fido"
-    assert "Labrador" in device_info["model"]
+    # Model is derived from the collar's moduleId, not the breed
+    assert device_info["model"] == "Series 2 Collar"
+    assert "Labrador" not in device_info["model"]
+    assert device_info["serial_number"] == "FC2ABC123"
     assert device_info["sw_version"] == "1.2.3"
 
 

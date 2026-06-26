@@ -23,16 +23,15 @@ from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.helpers.device_registry import DeviceInfo
 from custom_components.tryfi.pytryfi.fiPet import FiPet
 
 from .const import (
     DOMAIN,
     MANUFACTURER,
-    MODEL,
     SENSOR_STATS_BY_TIME,
     SENSOR_STATS_BY_TYPE,
 )
+from .helpers import collar_device_info
 from .pytryfi import PyTryFi
 from .pytryfi.fiWifiNetwork import FiWifiNetwork
 
@@ -139,6 +138,12 @@ SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
         name="Module ID",
         icon="mdi:identifier",
     ),
+    "breed": SensorEntityDescription(
+        key="breed",
+        name="Breed",
+        icon="mdi:dog",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
     "signal_strength": SensorEntityDescription(
         key="signal_strength",
         name="Signal Strength",
@@ -191,6 +196,7 @@ async def async_setup_entry(
                 PetGenericSensor(coordinator, pet, "connection_state"),
                 PetGenericSensor(coordinator, pet, "led_color"),
                 PetGenericSensor(coordinator, pet, "module_id"),
+                PetGenericSensor(coordinator, pet, "breed"),
                 PetGenericSensor(coordinator, pet, "signal_strength"),
             ]
         )
@@ -299,12 +305,7 @@ class TryFiBatterySensor(TryFiSensorBase):
     def device_info(self) -> dict[str, Any]:
         """Return device information."""
         pet = self.coordinator.data.getPet(self._pet_id)
-        return {
-            "identifiers": {(DOMAIN, pet.petId)},
-            "name": pet.name,
-            "manufacturer": MANUFACTURER,
-            "model": MODEL,
-        }
+        return collar_device_info(pet)
 
     @property
     def native_value(self) -> StateType:
@@ -357,12 +358,7 @@ class PetStatsSensor(TryFiSensorBase):
     def device_info(self) -> dict[str, Any]:
         """Return device information."""
         pet = self.coordinator.data.getPet(self._pet_id)
-        return {
-            "identifiers": {(DOMAIN, pet.petId)},
-            "name": pet.name,
-            "manufacturer": MANUFACTURER,
-            "model": MODEL,
-        }
+        return collar_device_info(pet)
 
     @property
     def native_value(self) -> StateType:
@@ -412,12 +408,7 @@ class PetGenericSensor(TryFiSensorBase):
     def device_info(self) -> dict[str, Any]:
         """Return device information."""
         pet = self.coordinator.data.getPet(self._pet_id)
-        return {
-            "identifiers": {(DOMAIN, pet.petId)},
-            "name": pet.name,
-            "manufacturer": MANUFACTURER,
-            "model": MODEL,
-        }
+        return collar_device_info(pet)
 
     @property
     def options(self) -> list[str] | None:
@@ -463,6 +454,8 @@ class PetGenericSensor(TryFiSensorBase):
         elif self._key == "module_id":
             if hasattr(pet, "device") and pet.device:
                 return getattr(pet.device, "moduleId", None)
+        elif self._key == "breed":
+            return getattr(pet, "breed", None)
         elif self._key == "signal_strength":
             connected_to = getattr(pet.device, "connectedTo", None)
             if connected_to and connected_to == "ConnectedToCellular":
@@ -600,12 +593,7 @@ class PetSleepQualitySensor(TryFiSensorBase):
     def device_info(self) -> dict[str, Any]:
         """Return device information."""
         pet = self.coordinator.data.getPet(self._pet_id)
-        return {
-            "identifiers": {(DOMAIN, pet.petId)},
-            "name": pet.name,
-            "manufacturer": MANUFACTURER,
-            "model": MODEL,
-        }
+        return collar_device_info(pet)
 
     @property
     def native_value(self) -> StateType:
@@ -701,12 +689,7 @@ class PetBehaviorSensor(TryFiSensorBase):
             self._attr_state_class = SensorStateClass.MEASUREMENT
 
         # Set device info
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, pet.petId)},
-            name=pet.name,
-            manufacturer="TryFi",
-            model="Series 3+ Collar",
-        )
+        self._attr_device_info = collar_device_info(pet)
 
     def _fipet_attr_name(self) -> str:
         attr_name = f"{self._period}{self._behavior_type.title()}{'Count' if self._metric_type == 'count' else 'Duration'}"

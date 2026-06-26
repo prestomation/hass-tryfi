@@ -140,6 +140,21 @@ async def test_generic_sensor(
     assert sensor.icon == "mdi:wifi"
 
 
+async def test_breed_sensor(
+    hass: HomeAssistant, mock_coordinator, mock_pet_with_stats
+) -> None:
+    """Test the breed diagnostic sensor reports the pet's breed."""
+    mock_pet_with_stats.breed = "Australian Cattle Dog"
+    mock_coordinator.data.getPet.return_value = mock_pet_with_stats
+
+    sensor = PetGenericSensor(mock_coordinator, mock_pet_with_stats, "breed")
+
+    assert sensor.unique_id == "test_pet_123-breed"
+    assert sensor.name == "Fido Breed"
+    assert sensor.native_value == "Australian Cattle Dog"
+    assert sensor.icon == "mdi:dog"
+
+
 async def test_base_sensor(hass: HomeAssistant, mock_coordinator) -> None:
     """Test TryFi base station sensor."""
     mock_base = Mock()

@@ -22,6 +22,7 @@ def mock_pet_lost_mode():
     pet.isLost = False
     pet.device = Mock()
     pet.device.buildId = "1.2.3"
+    pet.device.moduleId = "FC2ABC123"
     pet.setLostDogMode = Mock()
     return pet
 
@@ -53,7 +54,10 @@ async def test_lost_mode_select_safe(
     device_info = select.device_info
     assert device_info["identifiers"] == {(DOMAIN, "test_pet_123")}
     assert device_info["name"] == "Fido"
-    assert "Labrador" in device_info["model"]
+    # Model is derived from the collar's moduleId, not the breed
+    assert device_info["model"] == "Series 2 Collar"
+    assert "Labrador" not in device_info["model"]
+    assert device_info["serial_number"] == "FC2ABC123"
     assert device_info["sw_version"] == "1.2.3"
 
 

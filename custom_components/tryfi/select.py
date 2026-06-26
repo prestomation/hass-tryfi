@@ -11,7 +11,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, MANUFACTURER, MODEL
+from .const import DOMAIN
+from .helpers import collar_device_info
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -70,23 +71,7 @@ class TryFiLostModeSelect(CoordinatorEntity, SelectEntity):
         if not pet:
             return {}
 
-        device_info = {
-            "identifiers": {(DOMAIN, pet.petId)},
-            "name": pet.name,
-            "manufacturer": MANUFACTURER,
-            "model": MODEL,
-        }
-
-        # Add breed if available
-        if hasattr(pet, "breed") and pet.breed:
-            device_info["model"] = f"{MODEL} - {pet.breed}"
-
-        # Add firmware version if available
-        if hasattr(pet, "device") and pet.device:
-            if hasattr(pet.device, "buildId"):
-                device_info["sw_version"] = pet.device.buildId
-
-        return device_info
+        return collar_device_info(pet)
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""

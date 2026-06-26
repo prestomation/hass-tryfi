@@ -61,7 +61,8 @@ async def test_entity_device_info_variations(
     pet = Mock()
     pet.petId = "test_pet"
     pet.name = "Test"
-    # No breed, no device
+    # No device, so the collar generation can't be determined
+    pet.device = None
 
     mock_coordinator.data.getPet.return_value = pet
 
@@ -71,10 +72,12 @@ async def test_entity_device_info_variations(
     assert device_info["identifiers"] == {("tryfi", "test_pet")}
     assert device_info["name"] == "Test"
     assert device_info["manufacturer"] == "TryFi"
+    # Falls back to the generic model when the moduleId is unavailable
     assert device_info["model"] == "Smart Dog Collar"
+    assert "serial_number" not in device_info
     assert "sw_version" not in device_info
 
-    # Add breed
+    # Breed no longer affects the model
     pet.breed = "Poodle"
     device_info = sensor.device_info
     assert device_info["model"] == "Smart Dog Collar"
